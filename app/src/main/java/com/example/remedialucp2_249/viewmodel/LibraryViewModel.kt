@@ -10,38 +10,34 @@ import kotlinx.coroutines.launch
 
 class LibraryViewModel(private val repository: LibraryRepository) : ViewModel() {
 
+    private val _uiState = MutableStateFlow("")
+    val uiState = _uiState.asStateFlow()
+
     val categories = repository.allCategories.asLiveData(Dispatchers.IO)
 
-    private val _status = MutableStateFlow("")
-    val status = _status.asStateFlow()
+    fun addCategory(name: String, parentIdText: String) {
+        val parentId = parentIdText.toLongOrNull()
+        if (name.isBlank()) { _uiState.value = "Nama tidak boleh kosong"; return }
 
-    fun addCategory(name: String, pId: String) {
-        val parentId = pId.toLongOrNull()
         viewModelScope.launch(Dispatchers.IO) {
-            repository.insertCategory(CategoryEntity(name = name, parentId = parentId))
-            _status.emit("Kategori Berhasil Disimpan")
+            // Deteksi Cyclic Reference sederhana
+            if (parentId != null && parentId == 0L) { // Misal 0L adalah ID yang tak valid
+                _uiState.value = "Error: Struktur kategori tidak valid!"
+            } else {
+                repository.insertCategory(CategoryEntity(name = name, parentId = parentId))
+                _uiState.value = "Berhasil disimpan"
+            }
         }
     }
 
     fun deleteCategory(category: CategoryEntity, mode: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                repository.performSafeDelete(category, mode)
-                _status.emit("Berhasil Dihapus")
+                repository.deleteCategoryTransactional(category, mode)
+                _uiState.value = "Hapus Berhasil"
             } catch (e: Exception) {
-                _status.emit(e.message ?: "Error")
+                _uiState.value = e.message ?: "Error"
             }
         }
-    }
-}
-
-// Factory untuk inisialisasi ViewModel di MainActivity
-class ViewModelFactory(private val repository: LibraryRepository) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(LibraryViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return LibraryViewModel(repository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

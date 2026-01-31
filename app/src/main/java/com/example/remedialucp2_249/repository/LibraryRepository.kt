@@ -5,21 +5,26 @@ import com.example.remedialucp2_249.room.*
 
 class LibraryRepository(private val db: AppDatabase) {
     private val dao = db.libraryDao()
-
     val allCategories = dao.getAllCategories()
 
     suspend fun insertCategory(category: CategoryEntity) = dao.insertCategory(category)
 
-    suspend fun performSafeDelete(category: CategoryEntity, mode: String) {
+    suspend fun deleteCategoryTransactional(category: CategoryEntity, deleteMode: String) {
         db.withTransaction {
+            // 1. Cek status pinjam (Syarat Rollback)
             val borrowed = dao.countBorrowedBooks(category.categoryId)
-            if (borrowed > 0) throw Exception("GAGAL: $borrowed buku masih dipinjam!")
+            if (borrowed > 0) throw Exception("ROLLBACK: $borrowed buku masih dipinjam!")
 
-            if (mode == "SOFT_DELETE") dao.softDeleteBooks(category.categoryId)
-            else dao.detachBooks(category.categoryId)
+            // 2. Opsi Penghapusan Dinamis
+            if (deleteMode == "SOFT_DELETE") {
+                dao.softDeleteBooksInCategory(category.categoryId)
+            } else {
+                dao.detachBooksFromCategory(category.categoryId)
+            }
 
+            // 3. Hapus Kategori & Audit Log
             dao.deleteCategory(category)
-            dao.insertLog(AuditLogEntity(action = "DELETE", note = "Hapus kategori ${category.name}"))
+            dao.insertLog(AuditLogEntity(action = "DELETE", note = "Kategori ${category.name} dihapus mode $deleteMode"))
         }
     }
 }

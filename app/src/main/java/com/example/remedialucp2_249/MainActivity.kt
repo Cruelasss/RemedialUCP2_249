@@ -5,11 +5,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
-import com.example.remedialucp2_249.room.AppDatabase
 import com.example.remedialucp2_249.repositori.LibraryRepository
-import com.example.remedialucp2_249.repository.LibraryRepository
-import com.example.remedialucp2_249.viewmodel.LibraryViewModel
+import com.example.remedialucp2_249.room.AppDatabase
 import com.example.remedialucp2_249.view.LibraryScreen
+import com.example.remedialucp2_249.viewmodel.LibraryViewModel
 import com.example.remedialucp2_249.viewmodel.ViewModelFactory
 
 class MainActivity : ComponentActivity() {
