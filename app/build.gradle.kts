@@ -2,20 +2,17 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
-
+    alias(libs.plugins.ksp) // Digunakan untuk Room Compiler
 }
 
 android {
-    namespace = "com.example.RemedialUCP_249"
-    compileSdk {
-        version = release(36)
-    }
+    namespace = "com.example.remedialucp2_249"
+    compileSdk = 35 // Gunakan SDK 35 (Stable) kecuali Anda benar-benar butuh fitur 36 preview
 
     defaultConfig {
-        applicationId = "com.example.RemedialUCP_249"
+        applicationId = "com.example.remedialucp2_249"
         minSdk = 29
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -44,6 +41,7 @@ android {
 }
 
 dependencies {
+    // Core Android & Compose
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -52,24 +50,23 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.material3)
+
+    // --- ROOM DATABASE (Wajib untuk Transaction & Coroutines) ---
+    val roomVersion = "2.6.1"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion") // Wajib ada agar db.withTransaction{} terbaca
+    ksp("androidx.room:room-compiler:$roomVersion")
+
+    // --- LIFECYCLE & STATE ---
+    implementation(libs.lifecycle.viewmodel.compose)
+    implementation(libs.lifecycle.runtime.compose)
+    implementation("androidx.compose.runtime:runtime-livedata") // Untuk observeAsState()
+
+    // --- NAVIGATION ---
+    implementation(libs.navigation.compose)
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    debugImplementation(libs.androidx.compose.ui.tooling)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
-    implementation(libs.lifecycle.viewmodel.compose)
-    implementation(libs.lifecycle.runtime.compose)
-    implementation(libs.navigation.compose)
-    implementation(libs.retrofit.serialization)
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.okhttp)
-    implementation(libs.okhttp.logging)
-    implementation("androidx.compose.material:material-icons-core")
-
-
-    // Library tambahan untuk ikon yang lebih lengkap (termasuk ArrowBack)
-    implementation("androidx.compose.material:material-icons-extended")
 }
